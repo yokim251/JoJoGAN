@@ -11,6 +11,7 @@ import torchvision
 import scipy
 import scipy.ndimage
 import torchvision.transforms as transforms
+from torchvision.utils import save_image
 
 google_drive_paths = {
     "models/stylegan2-ffhq-config-f.pt": "https://drive.google.com/uc?id=1Yr7KuD959btpmcKGAUsbAk5rPjX2MytK",
@@ -101,6 +102,18 @@ def display_image(image, size=None, mode='nearest', unnorm=False, title=''):
     plt.axis('off')
     plt.imshow(image)
 
+def save_output_image(image, size=None, mode='nearest', filename='output.jpg'):
+    # image is [3,h,w] or [1,3,h,w] tensor [0,1]
+    if not isinstance(image, torch.Tensor):
+        image = transforms.ToTensor()(image).unsqueeze(0)
+    if image.is_cuda:
+        image = image.cpu()
+    if size is not None and image.size(-1) != size:
+        image = F.interpolate(image, size=(size,size), mode=mode)
+    if image.dim() == 4:
+        image = image[0]
+    save_image(image.detach(), 'output_images/'+filename)
+    
 def get_landmark(filepath, predictor):
     """get landmark with dlib
     :return: np.array shape=(68, 2)
